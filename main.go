@@ -63,6 +63,8 @@ func main() {
 		Str("revision", revision).
 		Str("buildDate", buildDate).
 		Str("goVersion", goVersion).
+		Str("mtu", *mtu).
+		Str("registryMirror", *registryMirror).
 		Msgf("Starting %v version %v...", app, version)
 
 	// define channel used to gracefully shutdown the application
@@ -78,6 +80,15 @@ func main() {
 
 	dockerRunner.waitForDockerDaemon()
 
+	// wait for mirror to be ready
+	for {
+		err := dockerRunner.runDockerPull("alpine")
+		if err == nil {
+			break
+		}
+		sleepWithJitter(10)
+	}
+
 	go func() {
 		// loop indefinitely
 		for {
@@ -87,7 +98,7 @@ func main() {
 			data, err := ioutil.ReadFile(*containerListFilePath)
 			if err != nil {
 				log.Warn().Err(err).Msgf("Failed reading file %v", *containerListFilePath)
-				sleepWithJitter()
+				sleepWithJitter(900)
 				continue
 			}
 
@@ -95,7 +106,7 @@ func main() {
 			var containerList ContainerList
 			if err := yaml.UnmarshalStrict(data, &containerList); err != nil {
 				log.Warn().Err(err).Msgf("Failed unmarshaling file %v", *containerListFilePath)
-				sleepWithJitter()
+				sleepWithJitter(900)
 				continue
 			}
 
@@ -114,7 +125,7 @@ func main() {
 			// wait for all pulls to finish
 			wg.Wait()
 
-			sleepWithJitter()
+			sleepWithJitter(900)
 		}
 	}()
 
@@ -123,8 +134,8 @@ func main() {
 	log.Info().Msg("Shutting down...")
 }
 
-func sleepWithJitter() {
-	sleepTime := applyJitter(900)
+func sleepWithJitter(input int) {
+	sleepTime := applyJitter(input)
 	log.Info().Msgf("Sleeping for %v seconds...", sleepTime)
 	time.Sleep(time.Duration(sleepTime) * time.Second)
 }

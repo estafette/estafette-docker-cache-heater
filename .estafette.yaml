@@ -30,6 +30,8 @@ stages:
 
       LABEL maintainer="estafette.io"
 
+      RUN addgroup docker
+
       COPY ${ESTAFETTE_GIT_NAME} /
 
       ENTRYPOINT ["/${ESTAFETTE_GIT_NAME}"]

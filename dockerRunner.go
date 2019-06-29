@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -41,6 +42,8 @@ func (dr *dockerRunnerImpl) startDockerDaemon() error {
 	if dr.registryMirror != "" {
 		args = append(args, fmt.Sprintf("--registry-mirror=%v", dr.registryMirror))
 	}
+
+	log.Debug().Msgf("dockerd %v", strings.Join(args, " "))
 
 	dockerDaemonCommand := exec.Command("dockerd", args...)
 	dockerDaemonCommand.Stdout = log.Logger
