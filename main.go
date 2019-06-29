@@ -117,8 +117,8 @@ func main() {
 			for _, c := range containerList.Containers {
 				go func(container string) {
 					defer wg.Done()
-					dockerRunner.runDockerPull(c)
-					dockerRunner.runDockerRemoveImage(c)
+					dockerRunner.runDockerPull(container)
+					dockerRunner.runDockerRemoveImage(container)
 				}(c)
 			}
 
