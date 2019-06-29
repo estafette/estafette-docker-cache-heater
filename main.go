@@ -100,6 +100,7 @@ func main() {
 			}
 
 			var wg sync.WaitGroup
+			wg.Add(len(containerList.Containers))
 
 			// pull all images in parallel
 			for _, c := range containerList.Containers {
