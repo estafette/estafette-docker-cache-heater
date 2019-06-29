@@ -107,6 +107,7 @@ func main() {
 				go func(container string) {
 					defer wg.Done()
 					dockerRunner.runDockerPull(c)
+					dockerRunner.runDockerRemoveImage(c)
 				}(c)
 			}
 

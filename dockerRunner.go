@@ -15,6 +15,7 @@ type DockerRunner interface {
 	waitForDockerDaemon()
 
 	runDockerPull(containerImage string) error
+	runDockerRemoveImage(containerImage string) error
 }
 
 type dockerRunnerImpl struct {
@@ -79,6 +80,22 @@ func (dr *dockerRunnerImpl) runDockerPull(containerImage string) (err error) {
 	err = runCommandExtended("docker", pullArgs)
 	if err != nil {
 		log.Warn().Err(err).Msgf("Failed pulling container image '%v'", containerImage)
+	}
+
+	return
+}
+
+func (dr *dockerRunnerImpl) runDockerRemoveImage(containerImage string) (err error) {
+
+	log.Info().Msgf("Removing docker image '%v'", containerImage)
+
+	pullArgs := []string{
+		"rmi",
+		containerImage,
+	}
+	err = runCommandExtended("docker", pullArgs)
+	if err != nil {
+		log.Warn().Err(err).Msgf("Failed removing container image '%v'", containerImage)
 	}
 
 	return
