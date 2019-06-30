@@ -111,18 +111,27 @@ func main() {
 			}
 
 			var wg sync.WaitGroup
-			wg.Add(len(containerList.Containers))
 
 			// pull all images in parallel
+			wg.Add(len(containerList.Containers))
 			for _, c := range containerList.Containers {
 				go func(container string) {
 					defer wg.Done()
 					dockerRunner.runDockerPull(container)
+				}(c)
+			}
+			// wait for all pulls to finish
+			wg.Wait()
+
+			// remove all images in sequence
+			wg.Add(len(containerList.Containers))
+			for _, c := range containerList.Containers {
+				func(container string) {
+					defer wg.Done()
 					dockerRunner.runDockerRemoveImage(container)
 				}(c)
 			}
-
-			// wait for all pulls to finish
+			// wait for all removals to finish
 			wg.Wait()
 
 			sleepWithJitter(900)
