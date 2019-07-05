@@ -21,13 +21,15 @@ type DockerRunner interface {
 }
 
 type dockerRunnerImpl struct {
+	debug          bool
 	mtu            string
 	registryMirror string
 }
 
 // NewDockerRunner returns a new DockerRunner
-func NewDockerRunner(mtu, registryMirror string) DockerRunner {
+func NewDockerRunner(debug bool, mtu, registryMirror string) DockerRunner {
 	return &dockerRunnerImpl{
+		debug:          debug,
 		mtu:            mtu,
 		registryMirror: registryMirror,
 	}
@@ -38,6 +40,10 @@ func (dr *dockerRunnerImpl) startDockerDaemon() error {
 	// dockerd --host=unix:///var/run/docker.sock --host=tcp://0.0.0.0:2375 --storage-driver=$STORAGE_DRIVER &
 	log.Debug().Msg("Starting docker daemon...")
 	args := []string{"--host=unix:///var/run/docker.sock", fmt.Sprintf("--mtu=%v", dr.mtu), "--host=tcp://0.0.0.0:2375", "--storage-driver=overlay2", "--max-concurrent-downloads=10"}
+
+	if dr.debug {
+		args = append(args, "--debug")
+	}
 
 	// if a registry mirror is set in config configured docker daemon to use it
 	if dr.registryMirror != "" {

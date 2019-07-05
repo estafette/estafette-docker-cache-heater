@@ -32,6 +32,7 @@ var (
 var (
 	// flags
 	mtu                    = kingpin.Flag("mtu", "The network mtu").Default("1500").OverrideDefaultFromEnvar("MTU").String()
+	dockerDaemonDebug      = kingpin.Flag("debug", "To enable debug logging from the docker daemon").Default("false").OverrideDefaultFromEnvar("DEBUG").Bool()
 	registryMirror         = kingpin.Flag("registry-mirror", "An optional registry mirror address").Envar("MIRROR").String()
 	registryHealthEndpoint = kingpin.Flag("registry-health-endpoint", "An optional health endpoint on the registry to wait for").Envar("REGISTRY_HEALTH_ENDPOINT").String()
 	containerListFilePath  = kingpin.Flag("container-list-file-path", "Path to the yaml file with a list of containers to preheat").Default("/configs/container-list.yaml").OverrideDefaultFromEnvar("CONTAINER_LIST_FILE_PATH").String()
@@ -73,7 +74,7 @@ func main() {
 	gracefulShutdown := make(chan os.Signal)
 	signal.Notify(gracefulShutdown, syscall.SIGTERM, syscall.SIGINT)
 
-	dockerRunner := NewDockerRunner(*mtu, *registryMirror)
+	dockerRunner := NewDockerRunner(*dockerDaemonDebug, *mtu, *registryMirror)
 
 	err := dockerRunner.startDockerDaemon()
 	if err != nil {
