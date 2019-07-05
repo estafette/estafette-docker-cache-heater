@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	stdlog "log"
 	"math/rand"
+	"net/http"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -30,9 +31,10 @@ var (
 
 var (
 	// flags
-	mtu                   = kingpin.Flag("mtu", "The network mtu").Default("1500").OverrideDefaultFromEnvar("MTU").String()
-	registryMirror        = kingpin.Flag("registry-mirror", "An optional registry mirror address").Envar("MIRROR").String()
-	containerListFilePath = kingpin.Flag("container-list-file-path", "Path to the yaml file with a list of containers to preheat").Default("/configs/container-list.yaml").OverrideDefaultFromEnvar("CONTAINER_LIST_FILE_PATH").String()
+	mtu                    = kingpin.Flag("mtu", "The network mtu").Default("1500").OverrideDefaultFromEnvar("MTU").String()
+	registryMirror         = kingpin.Flag("registry-mirror", "An optional registry mirror address").Envar("MIRROR").String()
+	registryHealthEndpoint = kingpin.Flag("registry-health-endpoint", "An optional health endpoint on the registry to wait for").Envar("REGISTRY_HEALTH_ENDPOINT").String()
+	containerListFilePath  = kingpin.Flag("container-list-file-path", "Path to the yaml file with a list of containers to preheat").Default("/configs/container-list.yaml").OverrideDefaultFromEnvar("CONTAINER_LIST_FILE_PATH").String()
 
 	// seed random number
 	r = rand.New(rand.NewSource(time.Now().UnixNano()))
@@ -80,13 +82,17 @@ func main() {
 
 	dockerRunner.waitForDockerDaemon()
 
-	// wait for mirror to be ready
-	for {
-		err := dockerRunner.runDockerPull("alpine")
-		if err == nil {
-			break
+	// wait for health endpoint to be ready
+	if *registryHealthEndpoint != "" {
+		for {
+			log.Info().Msgf("Waiting for registry health endpoint at %v to be ready", *registryHealthEndpoint)
+			resp, err := http.Get(*registryHealthEndpoint)
+			if err != nil && resp.StatusCode == http.StatusOK {
+				log.Info().Msg("Registry is ready")
+				break
+			}
+			sleepWithJitter(10)
 		}
-		sleepWithJitter(10)
 	}
 
 	go func() {
