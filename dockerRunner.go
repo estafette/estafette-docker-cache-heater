@@ -17,6 +17,7 @@ type DockerRunner interface {
 
 	runDockerPull(containerImage string) error
 	runDockerRemoveImage(containerImage string) error
+	runDockerSystemPrune() error
 }
 
 type dockerRunnerImpl struct {
@@ -99,6 +100,24 @@ func (dr *dockerRunnerImpl) runDockerRemoveImage(containerImage string) (err err
 	err = runCommandExtended("docker", pullArgs)
 	if err != nil {
 		log.Warn().Err(err).Msgf("Failed removing container image '%v'", containerImage)
+	}
+
+	return
+}
+
+func (dr *dockerRunnerImpl) runDockerSystemPrune() (err error) {
+
+	log.Info().Msg("Pruning docker system")
+
+	pullArgs := []string{
+		"system",
+		"prune",
+		"--all",
+		"--force",
+	}
+	err = runCommandExtended("docker", pullArgs)
+	if err != nil {
+		log.Warn().Err(err).Msg("Failed pruning system")
 	}
 
 	return

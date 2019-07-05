@@ -123,16 +123,8 @@ func main() {
 			// wait for all pulls to finish
 			wg.Wait()
 
-			// remove all images in sequence
-			wg.Add(len(containerList.Containers))
-			for _, c := range containerList.Containers {
-				func(container string) {
-					defer wg.Done()
-					dockerRunner.runDockerRemoveImage(container)
-				}(c)
-			}
-			// wait for all removals to finish
-			wg.Wait()
+			// prune all containers, images, volumes, etc
+			dockerRunner.runDockerSystemPrune()
 
 			sleepWithJitter(900)
 		}
