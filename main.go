@@ -88,7 +88,7 @@ func main() {
 		for {
 			log.Info().Msgf("Waiting for registry health endpoint at %v to be ready", *registryHealthEndpoint)
 			resp, err := http.Get(*registryHealthEndpoint)
-			if err != nil && resp.StatusCode == http.StatusOK {
+			if err == nil && resp.StatusCode == http.StatusOK {
 				log.Info().Msg("Registry is ready")
 				break
 			}
